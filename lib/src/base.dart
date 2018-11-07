@@ -1,106 +1,36 @@
 import 'dart:html';
 import 'package:meta/meta.dart';
-import 'package:mdc_web/mdc_web.dart' show autoInit;
+import 'pseudo_element.dart';
 import 'util.dart' show afterNextRender;
 
-/// The base class for all MDC HTML elements.
-///
-/// Descendant classes are expected implement these `static const` members:
-/// * `tag` (String) The element's HTML tag (mdc-*)
-/// * `customAttributes` (List<String>) The elements implemented attributes,
-/// or an empty array.
-/// * `cssClasses` (List<String>) The CSS classes the underlying component
-/// uses.
-/// * `htmlTemplate` (String) The HTML template, using mustache syntax for
-/// placeholders of each individual variable, except for CSS classes which can
-/// be grouped into one template variable. Variable names must contain only
-/// word characters and hyphens.
-abstract class MDCWebComponent {
-  MDCWebComponent(this.root) : initialInnerHtml = root.innerHtml;
-  final Element root;
-  final String initialInnerHtml;
-
-  bool _hasUsedAutoInit = false;
-
-  Iterable get _templateParts =>
-      __templateParts ??= template.split(RegExp(_templateVarPattern));
-  Iterable __templateParts;
-
-  /// The class's [htmlTemplate].
-  String get template;
-
-  /// The values of the placeholders in the template, in the same order that
-  /// they occur within the template.
-  Iterable get templateValues;
+/// * [Source Code](https://github.com/material-components/material-components-web-components/blob/master/packages/base/src/base-element.ts)
+/// (more like 'spirit animal')
+abstract class BaseElement extends PseudoElement {
+  BaseElement(Element root,
+      {List<String> observedAttributes, Node parent, Node directParent})
+      : super(root,
+            observedAttributes: observedAttributes,
+            parent: parent,
+            directParent: directParent) {
+    firstRender();
+    afterNextRender().then((_) => afterFirstRender());
+  }
 
   @protected
-  void render() {
-    renderQueue.add(() {
-      assert(_templateParts.length == templateValues.length + 1);
-      final buffer = StringBuffer(_templateParts.first);
-      for (int i = 1; i < _templateParts.length; i++) {
-        buffer
-          ..write(templateValues.elementAt(i - 1))
-          ..write(_templateParts.elementAt(i));
-      }
-      root.setInnerHtml(buffer.toString(),
-          treeSanitizer: NodeTreeSanitizer.trusted);
+  void firstRender();
 
-      if (usesAutoInit && !_hasUsedAutoInit) {
-        _hasUsedAutoInit = true;
-        autoInit(root);
-      }
-    });
-  }
+  @protected
+  void render();
 
-  @override
-  @mustCallSuper
-  void attached() {
-    render();
-    renderQueue.listenOnce(() => afterFirstRender());
-  }
-
+  @protected
   void afterFirstRender() {}
 
-  /// Descendant classes should implement [bool attributeDidChange()] instead of
-  /// this method.
+  /// Call super *after* handling the changes.
   @override
-  @deprecated
-  void attributeChanged(String name, String oldValue, String newValue) {
-    if (attributeDidChange(name, oldValue, newValue)) {
-      render();
-    }
+  @protected
+  @mustCallSuper
+  void attributesChanged(
+      Map<String, dynamic> oldValues, Map<String, dynamic> newValues) {
+    render();
   }
-
-  /// Return `true` if one of the element's `customAttributes` changed, and
-  /// the element will be re-rendered.
-  bool attributeDidChange(String name, String oldValue, String newValue);
-
-  bool get usesAutoInit => false;
-
-  static const _templateVarPattern = r'{{[\w-]+}}';
-  static final renderQueue = RenderQueue();
-}
-
-class RenderQueue {
-  final _queue = <Function>[];
-  final _listeners = Set<Function>();
-
-  void add(Function f) {
-    final first = _queue.isEmpty;
-    // print('queuing render.');
-    _queue.add(f);
-    if (first) {
-      // print('scheduling render.');
-      afterNextRender().then((_) {
-        // print('rendering.');
-        _queue.forEach((fn) => fn());
-        _queue.clear();
-        _listeners.forEach((fn) => fn());
-        _listeners.clear();
-      });
-    }
-  }
-
-  void listenOnce(Function f) => _listeners.add(f);
 }

@@ -1,38 +1,96 @@
 import 'dart:html';
 import 'base.dart';
+import 'util.dart';
 
-class MwcButton extends MDCWebComponent {
-  MwcButton(Element root) : super(root);
-
+/// * [Source Code](https://github.com/material-components/material-components-web-components/blob/master/packages/button/src/mwc-button.ts)
+class Button extends BaseElement {
   static const tag = 'mwc-button';
+  Button(Element root, {Node parent, Node directParent})
+      : super(root,
+            observedAttributes: [
+              rippleAttr,
+              hrefAttr,
+              targetAttr,
+              raisedAttr,
+              unelevatedAttr,
+              outlinedAttr,
+              denseAttr,
+              disabledAttr,
+              iconAttr,
+              labelAttr
+            ],
+            parent: parent,
+            directParent: directParent);
+
+  static const raisedAttr = 'raised';
+  static const unelevatedAttr = 'unelevated';
+  static const outlinedAttr = 'outlined';
+  static const denseAttr = 'dense';
+  static const disabledAttr = 'disabled';
+  static const iconAttr = 'icon';
+  static const labelAttr = 'label';
+  static const hrefAttr = 'href';
+  static const targetAttr = 'target';
+  static const rippleAttr = 'ripple';
 
   static const cssClasses = {
     'raised': 'mdc-button--raised',
     'unelevated': 'mdc-button--unelevated',
     'outlined': 'mdc-button--outlined',
     'dense': 'mdc-button--dense',
-    'icon': 'mdc-button__icon'
+    // 'icon': 'mdc-button__icon'
   };
 
-  static const rippleAttr = 'ripple';
-  static const hrefAttr = 'href';
-  static const targetAttr = 'target';
-  static const raisedAttr = 'raised';
-  static const unelevatedAttr = 'unelevated';
-  static const outlinedAttr = 'outlined';
-  static const denseAttr = 'dense';
-  static const iconAttr = 'icon';
+  bool get ripple => hasAttribute(root, rippleAttr);
+  set ripple(bool value) => setBoolAttribute(root, rippleAttr, value);
 
-  static const customAttributes = [
-    rippleAttr,
-    hrefAttr,
-    targetAttr,
-    raisedAttr,
-    unelevatedAttr,
-    outlinedAttr,
-    denseAttr,
-    iconAttr
-  ];
+  /// The anchor's HTTP reference. If set, an anchor tag will be used instead of a button.
+  String get href => getAttribute(root, hrefAttr);
+  set href(String value) => setAttribute(root, hrefAttr, value);
+
+  /// The anchor's target. If set, an anchor tag will be used instead of a button.
+  String get target => getAttribute(root, targetAttr);
+  set target(String value) => setAttribute(root, targetAttr, value);
+
+  bool get raised => hasAttribute(root, raisedAttr);
+  set raised(bool value) => setBoolAttribute(root, raisedAttr, value);
+
+  bool get unelevated => hasAttribute(root, unelevatedAttr);
+  set unelevated(bool value) => setBoolAttribute(root, unelevatedAttr, value);
+
+  bool get outlined => hasAttribute(root, outlinedAttr);
+  set outlined(bool value) => setBoolAttribute(root, outlinedAttr, value);
+
+  bool get dense => hasAttribute(root, denseAttr);
+  set dense(bool value) => setBoolAttribute(root, denseAttr, value);
+
+  bool get disabled => hasAttribute(root, disabledAttr);
+  set disabled(bool value) => setBoolAttribute(root, disabledAttr, value);
+
+  /// An icon name from either material icons or font awesome.
+  /// If you are using an SVG icon, leave this blank;
+  /// the `mdc-button__icon` class, and `aria-hidden` and `xmlns` attributes
+  /// will be added for you, but only if the SVG element is a child during the
+  /// `attached()` lifecycle callback.
+  String get icon => getAttribute(root, iconAttr);
+  set icon(String value) => setAttribute(root, iconAttr, value);
+
+  String get label => getAttribute(root, labelAttr);
+  set label(String value) => setAttribute(root, labelAttr, value);
+
+  /// Raised and unelevated buttons are both "contained".
+  bool get contained => raised || unelevated;
+
+  @override
+  void attached() {
+    super.attached();
+    final svg = querySelector('svg');
+    if (svg != null) {
+      svg.classes.add('mdc-button__icon');
+      svg.attributes['aria-hidden'] = 'true';
+      svg.attributes['xmlns'] = 'http://www.w3.org/2000/svg';
+    }
+  }
 
   static const buttonTemplate = '<button class="mdc-button"';
 
@@ -42,9 +100,6 @@ class MwcButton extends MDCWebComponent {
       '{{icon}}'
       '<span class="mdc-component-content">{{content}}</span>'
       '</{{tag}}>';
-
-  @override
-  String get template => htmlTemplate;
 
   @override
   Iterable get templateValues {
@@ -79,137 +134,11 @@ class MwcButton extends MDCWebComponent {
     ];
   }
 
-  bool _ripple;
-  String _href;
-  String _target;
-  bool _raised;
-  bool _unelevated;
-  bool _outlined;
-  bool _dense;
-  String _icon;
-
-  bool get ripple => _ripple;
-  void set ripple(bool value) {
-    if (value != _ripple) {
-      value
-          ? attributes[rippleAttr] = rippleAttr
-          : attributes.remove(rippleAttr);
-    }
-  }
-
-  /// The anchor's HTTP reference. If set, an anchor tag will be used instead of a button.
-  String get href => _href;
-  void set href(String value) {
-    if (value != _href) attributes[hrefAttr] = value;
-  }
-
-  /// The anchor's target. If set, an anchor tag will be used instead of a button.
-  String get target => _target;
-  void set target(String value) {
-    if (value != _target) attributes[targetAttr] = value;
-  }
-
-  bool get raised => _raised;
-  void set raised(bool value) {
-    if (value != _raised) {
-      value
-          ? attributes[raisedAttr] = raisedAttr
-          : attributes.remove(raisedAttr);
-    }
-  }
-
-  bool get unelevated => _unelevated;
-  void set unelevated(bool value) {
-    if (value != _unelevated) {
-      value
-          ? attributes[unelevatedAttr] = unelevatedAttr
-          : attributes.remove(unelevatedAttr);
-    }
-  }
-
-  bool get outlined => _outlined;
-  void set outlined(bool value) {
-    if (value != _outlined) {
-      value
-          ? attributes[outlinedAttr] = outlinedAttr
-          : attributes.remove(outlinedAttr);
-    }
-  }
-
-  bool get dense => _dense;
-  void set dense(bool value) {
-    if (value != _dense) {
-      value ? attributes[denseAttr] = denseAttr : attributes.remove(denseAttr);
-    }
-  }
-
-  /// An icon name from either material icons or font awesome.
-  /// If you are using an SVG icon, leave this blank;
-  /// the `mdc-button__icon` class, and `aria-hidden` and `xmlns` attributes
-  /// will be added for you, but only if the SVG element is a child during the
-  /// `attached()` lifecycle callback.
-  String get icon => _icon;
-  void set icon(String value) {
-    if (value != _icon) attributes[iconAttr] = value;
-  }
-
-  /// Raised and unelevated buttons are both "contained".
-  bool get contained => raised || unelevated;
-
-  MwcButton.created() : super.created() {
-    _ripple = attributes[rippleAttr] != null;
-    _href = attributes[hrefAttr];
-    _target = attributes[targetAttr];
-    _raised = attributes[raisedAttr] != null;
-    _unelevated = attributes[unelevatedAttr] != null;
-    _outlined = attributes[outlinedAttr] != null;
-    _dense = attributes[denseAttr] != null;
-    _icon = attributes[iconAttr];
-  }
+  @override
+  void firstRender() {}
 
   @override
-  bool get usesAutoInit => ripple;
-
-  @override
-  void attached() {
-    super.attached();
-    final svg = querySelector('svg');
-    if (svg != null) {
-      svg.classes.add('mdc-button__icon');
-      svg.attributes['aria-hidden'] = 'true';
-      svg.attributes['xmlns'] = 'http://www.w3.org/2000/svg';
-    }
-  }
-
-  @override
-  bool attributeDidChange(String name, String oldValue, String newValue) {
-    switch (name) {
-      case rippleAttr:
-        _ripple = newValue != null;
-        return true;
-      case hrefAttr:
-        _href = newValue;
-        return true;
-      case targetAttr:
-        _target = newValue;
-        return true;
-      case raisedAttr:
-        _raised = newValue != null;
-        return true;
-      case unelevatedAttr:
-        _unelevated = newValue != null;
-        return true;
-      case outlinedAttr:
-        _outlined = newValue != null;
-        return true;
-      case denseAttr:
-        _dense = newValue != null;
-        return true;
-      case iconAttr:
-        _icon = newValue;
-        return true;
-      default:
-        return false;
-    }
+  void render() {
+    // TODO: implement render
   }
 }
