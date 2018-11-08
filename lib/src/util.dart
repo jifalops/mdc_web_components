@@ -19,5 +19,12 @@ void setAttribute(Element element, String attribute, String value) =>
     element.attributes[attribute] = value;
 
 void setBoolAttribute(Element element, String attribute, bool value) => value
-    ? setAttribute(element, attribute, attribute)
+    ? setAttribute(element, attribute, '')
     : removeAttribute(element, attribute);
+
+class ClassMap {
+  ClassMap(this.classes);
+  Map<String, bool> classes;
+  @override
+  String toString() => classes.keys.where((key) => classes[key]).join(' ');
+}

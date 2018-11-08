@@ -10,6 +10,8 @@ abstract class PseudoElement {
         final oldValues = <String, dynamic>{};
         final newValues = <String, dynamic>{};
         mutations.forEach((mutation) {
+          attributeChangedCallback(mutation.attributeName, mutation.oldValue,
+              mutation.target.attributes[mutation.attributeName]);
           oldValues[mutation.attributeName] = mutation.oldValue;
           newValues[mutation.attributeName] =
               mutation.target.attributes[mutation.attributeName];
@@ -39,17 +41,20 @@ abstract class PseudoElement {
   }
   final Element root;
   final List<String> observedAttributes;
-  // final DomConnection attachment;
+
   /// If specified, [parent] and its subtree to will be observed to determine
   /// when this element is attached or detached from the DOM, and call
   /// [connectedCallback()] or [disconnectedCallback()] respectively.
+  ///
+  /// Example: `document.body`.
   ///
   /// This option overrides [directParent].
   final Node parent;
 
   /// If specified, [directParent] will be observed to determine when this
   /// element is attached or detached from the DOM, and call
-  /// [connectedCallback()] or [disconnectedCallback()] respectively.
+  /// [connectedCallback()] or [disconnectedCallback()] respectively. Its
+  /// subtree will not be watched.
   ///
   /// [parent] overrides this option.
   final Node directParent;
@@ -61,6 +66,10 @@ abstract class PseudoElement {
     _attributeObserver?.disconnect();
     _connectionObserver?.disconnect();
   }
+
+  @protected
+  void attributeChangedCallback(
+      String name, String oldValue, String newValue) {}
 
   /// Called when one or more of the [observedAttributes] changes. [oldValues]
   /// and [newValues] contains only the changes.

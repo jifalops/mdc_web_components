@@ -1,10 +1,31 @@
 import 'dart:html';
+import 'package:mdc_web/mdc_web.dart';
 import 'base.dart';
 import 'util.dart';
 
+/// * [Demo](https://material-components.github.io/material-components-web-components/demos/button.html)
 /// * [Source Code](https://github.com/material-components/material-components-web-components/blob/master/packages/button/src/mwc-button.ts)
-class Button extends BaseElement {
+class Button extends MwcBaseElement {
   static const tag = 'mwc-button';
+
+  // Classes are set on the [mdcRoot].
+  static const raisedClass = 'mdc-button--raised';
+  static const unelevatedClass = 'mdc-button--unelevated';
+  static const outlinedClass = 'mdc-button--outlined';
+  static const denseClass = 'mdc-button--dense';
+
+  // Attributes may be on [root] and/or [mdcRoot].
+  static const raisedAttr = 'raised';
+  static const unelevatedAttr = 'unelevated';
+  static const outlinedAttr = 'outlined';
+  static const denseAttr = 'dense';
+  static const disabledAttr = 'disabled';
+  static const iconAttr = 'icon';
+  static const labelAttr = 'label';
+  static const hrefAttr = 'href';
+  static const targetAttr = 'target';
+  static const rippleAttr = 'ripple';
+
   Button(Element root, {Node parent, Node directParent})
       : super(root,
             observedAttributes: [
@@ -22,24 +43,7 @@ class Button extends BaseElement {
             parent: parent,
             directParent: directParent);
 
-  static const raisedAttr = 'raised';
-  static const unelevatedAttr = 'unelevated';
-  static const outlinedAttr = 'outlined';
-  static const denseAttr = 'dense';
-  static const disabledAttr = 'disabled';
-  static const iconAttr = 'icon';
-  static const labelAttr = 'label';
-  static const hrefAttr = 'href';
-  static const targetAttr = 'target';
-  static const rippleAttr = 'ripple';
-
-  static const cssClasses = {
-    'raised': 'mdc-button--raised',
-    'unelevated': 'mdc-button--unelevated',
-    'outlined': 'mdc-button--outlined',
-    'dense': 'mdc-button--dense',
-    // 'icon': 'mdc-button__icon'
-  };
+  MDCRipple _mdcRipple;
 
   bool get ripple => hasAttribute(root, rippleAttr);
   set ripple(bool value) => setBoolAttribute(root, rippleAttr, value);
@@ -68,10 +72,7 @@ class Button extends BaseElement {
   set disabled(bool value) => setBoolAttribute(root, disabledAttr, value);
 
   /// An icon name from either material icons or font awesome.
-  /// If you are using an SVG icon, leave this blank;
-  /// the `mdc-button__icon` class, and `aria-hidden` and `xmlns` attributes
-  /// will be added for you, but only if the SVG element is a child during the
-  /// `attached()` lifecycle callback.
+  /// If you are using an SVG icon, leave this blank.
   String get icon => getAttribute(root, iconAttr);
   set icon(String value) => setAttribute(root, iconAttr, value);
 
@@ -81,64 +82,97 @@ class Button extends BaseElement {
   /// Raised and unelevated buttons are both "contained".
   bool get contained => raised || unelevated;
 
+  bool get iconIsFontAwesome => icon?.contains('fa-');
+
   @override
-  void attached() {
-    super.attached();
-    final svg = querySelector('svg');
+  String innerHtml() {
+    final classes = ClassMap({
+      raisedClass: raised,
+      unelevatedClass: unelevated,
+      outlinedClass: outlined,
+      denseClass: dense,
+    });
+    final iconHtml = icon != null
+        ? iconIsFontAwesome
+            ? '<i aria-hidden="true" class="mdc-button__icon $icon"></i>'
+            : '<i aria-hidden="true" class="mdc-button__icon material-icons">$icon</i>'
+        : '';
+    final svg = root.querySelector('svg');
     if (svg != null) {
       svg.classes.add('mdc-button__icon');
       svg.attributes['aria-hidden'] = 'true';
       svg.attributes['xmlns'] = 'http://www.w3.org/2000/svg';
     }
-  }
-
-  static const buttonTemplate = '<button class="mdc-button"';
-
-  static const htmlTemplate = '<{{tag}} {{linkAttrs}}'
-      ' class="mdc-button {{classList}}"'
-      ' {{ripple}}>'
-      '{{icon}}'
-      '<span class="mdc-component-content">{{content}}</span>'
-      '</{{tag}}>';
-
-  @override
-  Iterable get templateValues {
-    final tag = href != null ? 'a ' : 'button';
-    final classList = [];
-    if (raised) classList.add(cssClasses['raised']);
-    if (unelevated) classList.add(cssClasses['unelevated']);
-    if (outlined) classList.add(cssClasses['outlined']);
-    if (dense) classList.add(cssClasses['dense']);
-    return [
-      // tag
-      tag,
-      // linkAttrs
-      href != null
-          ? 'href="$href"${target != null ? ' target="$target"' : ''} role="button"'
-          : '',
-      // classList
-      classList.join(' '),
-      // ripple
-      ripple ? 'data-mdc-auto-init="MDCRipple"' : '',
-      // icon
-      icon != null
-          ? icon.contains('fa-')
-              ? '<i aria-hidden="true" class="${cssClasses['icon']} $icon"></i>'
-              : '<i aria-hidden="true" class="${cssClasses['icon']} material-icons">$icon</i>'
-          : '',
-      // content
-      this.querySelector('.mdc-component-content')?.innerHtml ??
-          initialInnerHtml,
-      // tag
-      tag
-    ];
+    if (href == null) {
+      return '<button class="mdc-button $classes"'
+          '${disabled ? disabledAttr : ''} aria-label="${label ?? icon}">'
+          '$iconHtml$label<slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot></button>';
+    } else {
+      return '<a href="$href"${target != null ? ' target="$target"' : ''}"'
+          'class="mdc-button $classes" role="button"'
+          '${disabled ? disabledAttr : ''} aria-label="${label ?? icon}">'
+          '$iconHtml$label<slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot></a>';
+    }
   }
 
   @override
-  void firstRender() {}
+  void afterFirstRender() {
+    print('afterfirstrender: $ripple, $mdcRoot');
+    if (ripple) _addRipple();
+  }
 
   @override
-  void render() {
-    // TODO: implement render
+  void attributeChangedCallback(String name, String oldValue, String newValue) {
+    switch (name) {
+      case rippleAttr:
+        ripple ? _addRipple() : _removeRipple();
+        break;
+      case raisedAttr:
+        mdcRoot.classes.toggle(raisedClass);
+        break;
+      case unelevatedAttr:
+        mdcRoot.classes.toggle(unelevatedClass);
+        break;
+      case outlinedAttr:
+        mdcRoot.classes.toggle(outlinedClass);
+        break;
+      case denseAttr:
+        mdcRoot.classes.toggle(denseClass);
+        break;
+      case disabledAttr:
+        setBoolAttribute(mdcRoot, disabledAttr, disabled);
+        break;
+      case iconAttr:
+        setAttribute(mdcRoot, iconAttr, newValue);
+        break;
+      case labelAttr:
+        setAttribute(mdcRoot, labelAttr, newValue);
+        break;
+      case hrefAttr:
+        if (oldValue == null || newValue == null)
+          fullRender();
+        else
+          setAttribute(mdcRoot, hrefAttr, newValue);
+        break;
+      case targetAttr:
+        setAttribute(mdcRoot, targetAttr, newValue);
+        break;
+    }
+  }
+
+  void _addRipple() {
+    _removeRipple();
+    _mdcRipple = MDCRipple.attachTo(mdcRoot);
+  }
+
+  void _removeRipple() {
+    _mdcRipple?.destroy();
+    _mdcRipple = null;
+  }
+
+  @override
+  void destroy() {
+    _removeRipple();
+    super.destroy();
   }
 }
