@@ -67,12 +67,13 @@ abstract class PseudoElement {
     _connectionObserver?.disconnect();
   }
 
+  /// Called when any of the [observedAttributes] change.
   @protected
   void attributeChangedCallback(
       String name, String oldValue, String newValue) {}
 
-  /// Called when one or more of the [observedAttributes] changes. [oldValues]
-  /// and [newValues] contains only the changes.
+  /// An aggregate form of [attributeChangedCallback()] called after each group
+  /// of changes, as grouped by a [MutationObserver].
   @protected
   void attributesChanged(
       Map<String, dynamic> oldValues, Map<String, dynamic> newValues) {}

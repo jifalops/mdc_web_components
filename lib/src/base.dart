@@ -6,8 +6,8 @@ import 'util.dart';
 
 /// * [Source Code](https://github.com/material-components/material-components-web-components/blob/master/packages/base/src/base-element.ts)
 /// (more like 'spirit animal')
-abstract class MwcBaseElement extends PseudoElement {
-  MwcBaseElement(Element root,
+abstract class MWCComponent extends PseudoElement {
+  MWCComponent(Element root,
       {List<String> observedAttributes, Node parent, Node directParent})
       : super(root,
             observedAttributes: observedAttributes,
@@ -26,6 +26,8 @@ abstract class MwcBaseElement extends PseudoElement {
   }
 
   Element get mdcRoot => root.firstChild;
+
+  MDCComponent get component;
 
   /// Get the initial innerHTML of this element. Typically called once at
   /// initialization, and again if the outermost tag of the template changes.

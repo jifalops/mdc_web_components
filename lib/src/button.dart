@@ -3,9 +3,15 @@ import 'package:mdc_web/mdc_web.dart';
 import 'base.dart';
 import 'util.dart';
 
-/// * [Demo](https://material-components.github.io/material-components-web-components/demos/button.html)
-/// * [Source Code](https://github.com/material-components/material-components-web-components/blob/master/packages/button/src/mwc-button.ts)
-class Button extends MwcBaseElement {
+/// A material-design button.
+///
+/// * [Design Guidelines](https://github.com/material-components/material-components-web-components)
+/// * [MDC Component Reference](https://material.io/develop/web/components/buttons/)
+/// * [MDC Demo](https://material-components.github.io/material-components-web-catalog/#/component/button)
+/// * [MWC Demo](https://material-components.github.io/material-components-web-components/demos/button.html)
+/// * [MDC Source Code](https://github.com/material-components/material-components-web/tree/master/packages/mdc-button)
+/// * [MWC Source Code](https://github.com/material-components/material-components-web-components/blob/master/packages/button/src/mwc-button.ts)
+class MWCButton extends MWCComponent {
   static const tag = 'mwc-button';
 
   // Classes are set on the [mdcRoot].
@@ -26,7 +32,7 @@ class Button extends MwcBaseElement {
   static const targetAttr = 'target';
   static const rippleAttr = 'ripple';
 
-  Button(Element root, {Node parent, Node directParent})
+  MWCButton(Element root, {Node parent, Node directParent})
       : super(root,
             observedAttributes: [
               rippleAttr,
@@ -43,6 +49,8 @@ class Button extends MwcBaseElement {
             parent: parent,
             directParent: directParent);
 
+  @override
+  MDCRipple get component => _mdcRipple;
   MDCRipple _mdcRipple;
 
   bool get ripple => hasAttribute(root, rippleAttr);
@@ -93,9 +101,8 @@ class Button extends MwcBaseElement {
       denseClass: dense,
     });
     final iconHtml = icon != null
-        ? iconIsFontAwesome
-            ? '<i aria-hidden="true" class="mdc-button__icon $icon"></i>'
-            : '<i aria-hidden="true" class="mdc-button__icon material-icons">$icon</i>'
+        ? '<i aria-hidden="true" class="mdc-button__icon ' +
+            (iconIsFontAwesome ? '$icon"></i>' : 'material-icons">$icon</i>')
         : '';
     final svg = root.querySelector('svg');
     if (svg != null) {
@@ -104,20 +111,27 @@ class Button extends MwcBaseElement {
       svg.attributes['xmlns'] = 'http://www.w3.org/2000/svg';
     }
     if (href == null) {
-      return '<button class="mdc-button $classes"'
-          '${disabled ? disabledAttr : ''} aria-label="${label ?? icon}">'
-          '$iconHtml$label<slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot></button>';
+      return '''
+        <button class="mdc-button $classes" aria-label="${label ?? icon}"
+            ${disabled ? disabledAttr : ''}>
+          $iconHtml
+          $label
+          <slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot>
+        </button>''';
     } else {
-      return '<a href="$href"${target != null ? ' target="$target"' : ''}"'
-          'class="mdc-button $classes" role="button"'
-          '${disabled ? disabledAttr : ''} aria-label="${label ?? icon}">'
-          '$iconHtml$label<slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot></a>';
+      return '''
+        <a class="mdc-button $classes" aria-label="${label ?? icon}"
+            ${disabled ? disabledAttr : ''} role="button"
+            href="$href"${target != null ? ' target="$target"' : ''}">
+          $iconHtml
+          $label
+          <slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot>
+        </a>''';
     }
   }
 
   @override
   void afterFirstRender() {
-    print('afterfirstrender: $ripple, $mdcRoot');
     if (ripple) _addRipple();
   }
 
@@ -160,19 +174,19 @@ class Button extends MwcBaseElement {
     }
   }
 
+  @override
+  void destroy() {
+    _removeRipple();
+    super.destroy();
+  }
+
   void _addRipple() {
     _removeRipple();
-    _mdcRipple = MDCRipple.attachTo(mdcRoot);
+    _mdcRipple = MDCRipple(mdcRoot);
   }
 
   void _removeRipple() {
     _mdcRipple?.destroy();
     _mdcRipple = null;
-  }
-
-  @override
-  void destroy() {
-    _removeRipple();
-    super.destroy();
   }
 }
