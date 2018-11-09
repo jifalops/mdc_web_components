@@ -4,6 +4,9 @@ import 'package:meta/meta.dart';
 abstract class PseudoElement {
   PseudoElement(this.root,
       {this.observedAttributes, this.parent, this.directParent}) {
+    // Unknown elements have an undefined display style.
+    if (root.style.display == '') root.style.display = displayStyle;
+
     // Observe attributes.
     if (observedAttributes?.isNotEmpty ?? false) {
       _attributeObserver = MutationObserver((mutations, obs) {
@@ -60,6 +63,9 @@ abstract class PseudoElement {
   final Node directParent;
   MutationObserver _attributeObserver;
   MutationObserver _connectionObserver;
+
+  /// The root element's display style.
+  String get displayStyle => 'inline';
 
   @mustCallSuper
   void destroy() {

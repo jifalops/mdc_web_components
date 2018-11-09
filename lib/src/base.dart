@@ -25,9 +25,9 @@ abstract class MWCComponent extends PseudoElement {
     root.setInnerHtml(innerHtml(), treeSanitizer: NodeTreeSanitizer.trusted);
   }
 
-  Element get mdcRoot => root.firstChild;
+  Element get mdcRoot => root.children[0];
 
-  MDCComponent get component;
+  MDCComponent get component => null;
 
   /// Get the initial innerHTML of this element. Typically called once at
   /// initialization, and again if the outermost tag of the template changes.

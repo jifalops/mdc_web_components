@@ -5,7 +5,7 @@ import 'util.dart';
 
 /// A material-design button.
 ///
-/// * [Design Guidelines](https://github.com/material-components/material-components-web-components)
+/// * [Design Guidelines](https://material.io/go/design-buttons)
 /// * [MDC Component Reference](https://material.io/develop/web/components/buttons/)
 /// * [MDC Demo](https://material-components.github.io/material-components-web-catalog/#/component/button)
 /// * [MWC Demo](https://material-components.github.io/material-components-web-components/demos/button.html)

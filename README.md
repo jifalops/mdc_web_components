@@ -28,6 +28,10 @@ the MWC equivalent is much easier to read:
 
 ## Usage
 
+See the [full example](./example/).
+
+### Include the script
+
 In your index.html, include this following script dependency just before the `main.dart.js` script.
 
 ```html
@@ -39,13 +43,36 @@ In your index.html, include this following script dependency just before the `ma
 <script defer src="main.dart.js"></script>
 ```
 
-Finally, you must **initialize the web components**.
+### Initialize the web components
 
 ```dart
   import 'package:mdc_web_components/mdc_web_components.dart';
   void main {
     initComponents();
   }
+```
+
+### Import styles
+
+When the official MWC JS package is complete this will no longer be necessary, but the styles for MDC components must be included via NPM.
+
+```sh
+# From the project's `web` directory.
+> npm install --save-dev material-components-web
+```
+
+```yaml
+# In pubspec.yaml
+dev_dependencies:
+  sass_builder:
+    # temporary work-around to include node_modules in the style search path.
+    git: https://github.com/jifalops/sass_builder
+```
+
+In `styles.scss` (renamed from `styles.css`):
+
+```scss
+@import 'material-components-web/material-components-web';
 ```
 
 ## Documentation
