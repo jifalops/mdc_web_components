@@ -1,5 +1,6 @@
 import 'dart:html';
 import 'package:mdc_web/mdc_web.dart';
+import 'pseudo_element.dart';
 import 'base.dart';
 import 'util.dart';
 
@@ -13,36 +14,84 @@ import 'util.dart';
 class MWCCard extends MWCComponent {
   static const tag = 'mwc-card';
 
-  static const strokedClass = 'mdc-card--stroked';
+  static const outlinedClass = 'mdc-card--outlined';
+  static const primaryActionSlotClass = 'mdc-card__primary-action';
+  static const mediaClass = 'mdc-card__media';
+  static const mediaSquareClass = 'mdc-card__media--square';
+  static const media16x9Class = 'mdc-card__media--16-9';
+  static const mediaContentClass = 'mdc-card__media-content';
+  static const actionsClass = 'mdc-card__actions';
+  static const actionsFullBleedClass = 'mdc-card__actions--full-bleed';
+  static const actionButtonsClass = 'mdc-card__action-buttons';
+  static const actionIconsClass = 'mdc-card__action-icons';
+  static const actionClass = 'mdc-card__action';
+  static const actionButtonClass = 'mdc-card__action--button';
+  static const actionIconClass = 'mdc-card__action--icon';
 
-  static const strokedAttr = 'stroked';
+  static const outlinedAttr = 'outlined';
+  static const primaryActionSlot = 'primary-action';
+  static const mediaSlot = 'media';
+  static const mediaSquareAttr = 'media-square';
+  static const media16x9Attr = 'media-16x9';
+  static const mediaContentAttr = 'media-content';
+  static const actionsSlot = 'actions';
+  static const actionsFullBleedAttr = 'actions-full-bleed';
+  static const actionButtonsAttr = 'action-buttons';
+  static const actionIconsAttr = 'action-icons';
+  static const actionAttr = 'action';
+  static const actionButtonAttr = 'action-button';
+  static const actionIconAttr = 'action-icon';
+
+  static const _primaryActionSlotSelector = '[slot="${primaryActionSlot}"]';
+  static const _mediaSlotSelector = '[slot="${mediaSlot}"]';
+  static const _actionsSlotSelector = '[slot="${actionsSlot}"]';
 
   MWCCard(Element root, {Node parent, Node directParent})
       : super(root,
-            observedAttributes: [strokedAttr],
+            observedAttributes: [outlinedAttr],
             parent: parent,
-            directParent: directParent);
+            directParent: directParent) {
+
+  }
+
+  BemElement primaryAction, media, actions;
 
   @override
   String get displayStyle => 'block';
 
-  bool get stroked => hasAttribute(root, strokedAttr);
-  set stroked(bool value) => setBoolAttribute(root, strokedAttr, value);
+  bool get outlined => hasAttribute(root, outlinedAttr);
+  set outlined(bool value) => setBoolAttribute(root, outlinedAttr, value);
 
   @override
   String innerHtml() {
     return '''
-      <div class="mdc-card ${stroked ? strokedClass : ''}">
-        <slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot>
+      <div class="mdc-card ${outlined ? outlinedClass : ''}">
+        <slot name="primary-action"></slot>
+        <slot name="media"></slot>
+        <slot name="actions"></slot>
       </div>''';
   }
 
   @override
   void attributeChangedCallback(String name, String oldValue, String newValue) {
     switch (name) {
-      case strokedAttr:
-        mdcRoot.classes.toggle(strokedClass);
+      case outlinedAttr:
+        mdcRoot.classes.toggle(outlinedClass);
         break;
     }
+  }
+
+  @override
+  void connectedCallback() {
+    Element el = root.querySelector(_primaryActionSlotSelector);
+    if (el != null) {
+      primaryAction = BemElement(el, root,
+          slot: primaryActionSlot, slotClass: primaryActionSlotClass);
+    } else {}
+
+    media = root.querySelector('[slot="${mediaSlot}"]');
+    actions = root.querySelector('[slot="${actionsSlot}"]');
+
+    if (primaryAction != null) {}
   }
 }

@@ -14,13 +14,11 @@ import 'util.dart';
 class MWCButton extends MWCComponent {
   static const tag = 'mwc-button';
 
-  // Classes are set on the [mdcRoot].
   static const raisedClass = 'mdc-button--raised';
   static const unelevatedClass = 'mdc-button--unelevated';
   static const outlinedClass = 'mdc-button--outlined';
   static const denseClass = 'mdc-button--dense';
 
-  // Attributes may be on [root] and/or [mdcRoot].
   static const raisedAttr = 'raised';
   static const unelevatedAttr = 'unelevated';
   static const outlinedAttr = 'outlined';
@@ -32,9 +30,9 @@ class MWCButton extends MWCComponent {
   static const targetAttr = 'target';
   static const rippleAttr = 'ripple';
 
-  MWCButton(Element root, {Node parent, Node directParent})
+  MWCButton(Element root)
       : super(root,
-            observedAttributes: [
+            rootAttributes: [
               rippleAttr,
               hrefAttr,
               targetAttr,
@@ -45,9 +43,7 @@ class MWCButton extends MWCComponent {
               disabledAttr,
               iconAttr,
               labelAttr
-            ],
-            parent: parent,
-            directParent: directParent);
+            ]);
 
   @override
   MDCRipple get component => _mdcRipple;
@@ -136,7 +132,7 @@ class MWCButton extends MWCComponent {
   }
 
   @override
-  void attributeChangedCallback(String name, String oldValue, String newValue) {
+  void attributeChanged(String name, String oldValue, String newValue) {
     switch (name) {
       case rippleAttr:
         ripple ? _addRipple() : _removeRipple();

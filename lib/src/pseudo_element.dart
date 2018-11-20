@@ -14,10 +14,10 @@ abstract class PseudoElement {
         final newValues = <String, dynamic>{};
         mutations.forEach((mutation) {
           attributeChangedCallback(mutation.attributeName, mutation.oldValue,
-              mutation.target.attributes[mutation.attributeName]);
+              mutation.target.rootAttributes[mutation.attributeName]);
           oldValues[mutation.attributeName] = mutation.oldValue;
           newValues[mutation.attributeName] =
-              mutation.target.attributes[mutation.attributeName];
+              mutation.target.rootAttributes[mutation.attributeName];
         });
         attributesChanged(oldValues, newValues);
       });
@@ -41,6 +41,8 @@ abstract class PseudoElement {
       else
         _connectionObserver.observe(directParent, childList: true);
     }
+
+    if (root.isConnected) connectedCallback();
   }
   final Element root;
   final List<String> observedAttributes;
