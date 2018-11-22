@@ -1,6 +1,5 @@
 import 'dart:html';
 import 'package:mdc_web/mdc_web.dart';
-import 'pseudo_element.dart';
 import 'base.dart';
 import 'util.dart';
 
@@ -46,15 +45,29 @@ class MWCCard extends MWCComponent {
   static const _mediaSlotSelector = '[slot="${mediaSlot}"]';
   static const _actionsSlotSelector = '[slot="${actionsSlot}"]';
 
-  MWCCard(Element root, {Node parent, Node directParent})
-      : super(root,
-            observedAttributes: [outlinedAttr],
-            parent: parent,
-            directParent: directParent) {
-
+  MWCCard(Element root)
+      : super(root, rootAttributes: [
+          outlinedAttr
+        ], subtreeAttributes: [
+          primaryActionSlot,
+          mediaSlot,
+          mediaSquareAttr,
+          media16x9Attr,
+          mediaContentAttr,
+          actionsSlot,
+          actionsFullBleedAttr,
+          actionButtonsAttr,
+          actionIconsAttr,
+          actionAttr,
+          actionButtonAttr,
+          actionIconAttr,
+        ]) {
+    subtreeElements.forEach((el) {
+      if (hasAttribute(el, primaryActionSlot))
+        el.classes.add(primaryActionSlotClass);
+      else if (hasAttribute(el, attribute))
+    });
   }
-
-  BemElement primaryAction, media, actions;
 
   @override
   String get displayStyle => 'block';
@@ -66,14 +79,12 @@ class MWCCard extends MWCComponent {
   String innerHtml() {
     return '''
       <div class="mdc-card ${outlined ? outlinedClass : ''}">
-        <slot name="primary-action"></slot>
-        <slot name="media"></slot>
-        <slot name="actions"></slot>
+        ${root.innerHtml}
       </div>''';
   }
 
   @override
-  void attributeChangedCallback(String name, String oldValue, String newValue) {
+  void attributeChanged(String name, String oldValue, String newValue) {
     switch (name) {
       case outlinedAttr:
         mdcRoot.classes.toggle(outlinedClass);
@@ -82,16 +93,9 @@ class MWCCard extends MWCComponent {
   }
 
   @override
-  void connectedCallback() {
-    Element el = root.querySelector(_primaryActionSlotSelector);
-    if (el != null) {
-      primaryAction = BemElement(el, root,
-          slot: primaryActionSlot, slotClass: primaryActionSlotClass);
-    } else {}
+  void subtreeChanged(Element target, bool removed) {}
 
-    media = root.querySelector('[slot="${mediaSlot}"]');
-    actions = root.querySelector('[slot="${actionsSlot}"]');
-
-    if (primaryAction != null) {}
-  }
+  @override
+  void subtreeAttributeChanged(
+      Element target, String name, String oldValue, String newValue) {}
 }

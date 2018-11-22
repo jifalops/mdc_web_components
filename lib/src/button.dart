@@ -5,6 +5,9 @@ import 'util.dart';
 
 /// A material-design button.
 ///
+/// If using an SVG icon, the `mdc-button__icon` class, `aria-hidden` and `xmlns`
+/// attributes will be set on the icon when the button first renders.
+///
 /// * [Design Guidelines](https://material.io/go/design-buttons)
 /// * [MDC Component Reference](https://material.io/develop/web/components/buttons/)
 /// * [MDC Demo](https://material-components.github.io/material-components-web-catalog/#/component/button)
@@ -31,19 +34,18 @@ class MWCButton extends MWCComponent {
   static const rippleAttr = 'ripple';
 
   MWCButton(Element root)
-      : super(root,
-            rootAttributes: [
-              rippleAttr,
-              hrefAttr,
-              targetAttr,
-              raisedAttr,
-              unelevatedAttr,
-              outlinedAttr,
-              denseAttr,
-              disabledAttr,
-              iconAttr,
-              labelAttr
-            ]);
+      : super(root, rootAttributes: [
+          rippleAttr,
+          hrefAttr,
+          targetAttr,
+          raisedAttr,
+          unelevatedAttr,
+          outlinedAttr,
+          denseAttr,
+          disabledAttr,
+          iconAttr,
+          labelAttr
+        ]);
 
   @override
   MDCRipple get component => _mdcRipple;
@@ -86,7 +88,7 @@ class MWCButton extends MWCComponent {
   /// Raised and unelevated buttons are both "contained".
   bool get contained => raised || unelevated;
 
-  bool get iconIsFontAwesome => icon?.contains('fa-');
+  bool get usesFontAwesome => icon?.contains('fa-') ?? false;
 
   @override
   String innerHtml() {
@@ -98,7 +100,7 @@ class MWCButton extends MWCComponent {
     });
     final iconHtml = icon != null
         ? '<i aria-hidden="true" class="mdc-button__icon ' +
-            (iconIsFontAwesome ? '$icon"></i>' : 'material-icons">$icon</i>')
+            (usesFontAwesome ? '$icon"></i>' : 'material-icons">$icon</i>')
         : '';
     final svg = root.querySelector('svg');
     if (svg != null) {

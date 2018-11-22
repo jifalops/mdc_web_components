@@ -6,13 +6,14 @@ import 'util.dart';
 
 /// * [Source Code](https://github.com/material-components/material-components-web-components/blob/master/packages/base/src/base-element.ts)
 /// (more like 'spirit animal')
-abstract class MWCComponent extends AttributeObserver {
+abstract class MWCComponent extends AttributeObserverBase {
   MWCComponent(Element root,
       {List<String> rootAttributes, List<String> subtreeAttributes})
       : super(root,
             rootAttributes: rootAttributes,
             subtreeAttributes: subtreeAttributes) {
     if (!hasAttribute(root, 'mwc-upgraded')) {
+      root.style.display = displayStyle;
       fullRender();
       setBoolAttribute(root, 'mwc-upgraded', true);
       afterNextRender().then((_) => afterFirstRender());
@@ -28,6 +29,8 @@ abstract class MWCComponent extends AttributeObserver {
   Element get mdcRoot => root.children[0];
 
   MDCComponent get component => null;
+
+  String get displayStyle => 'inline';
 
   /// Get the initial innerHTML of this element. Typically called once at
   /// initialization, and again if the outermost tag of the template changes.
@@ -45,4 +48,9 @@ abstract class MWCComponent extends AttributeObserver {
   @override
   @protected
   void subtreeChanged(Element target, bool removed) {}
+
+  @override
+  @protected
+  void subtreeAttributeChanged(
+      Element target, String name, String oldValue, String newValue) {}
 }
