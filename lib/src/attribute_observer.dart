@@ -7,67 +7,90 @@ import 'package:meta/meta.dart';
 abstract class AttributeObserverBase {
   AttributeObserverBase(
     this.root, {
-    Map<String, String> rootAttributes,
-    Map<String, String> subtreeAttributes,
-    Dynamism dynamism,
-  })  : rootAttributes = rootAttributes ?? {},
-        subtreeAttributes = subtreeAttributes ?? {},
-        dynamism = dynamism ?? Dynamism.full {
-    if (subtreeAttributes.isNotEmpty) {
-      _nestedRootElements
-          .addAll(root.querySelectorAll(root.tagName)..remove(root));
-    }
-
-    _observer = MutationObserver((muts, obs) {
-      List<MutationRecord> mutations = List.from(muts);
-      mutations.forEach((mutation) {
-        if (mutation.attributeName.isNotEmpty) {
+    this.rootAttributes: const {},
+    this.subtreeAttributes: const {},
+    bool directDescendantsOnly: false,
+  }) {
+    if (rootAttributes.isNotEmpty) {
+      _attributeObserver = MutationObserver((mutations, obs) {
+        mutations.forEach((mutation) {
           attributeChanged(mutation.attributeName, mutation.oldValue,
               root.attributes[mutation.attributeName]);
-        } else {
+        });
+      });
+      _attributeObserver.observe(root,
+          attributes: true,
+          attributeOldValue: true,
+          attributeFilter: rootAttributes.keys.toList());
+
+      // Add classes to first element child.
+      rootAttributes.forEach((attr, klass) {
+        if (klass != null && root.attributes.containsKey(attr))
+          root.children[0].classes.add(klass);
+      });
+    }
+
+    if (subtreeAttributes.isNotEmpty) {
+      _subtreeObserver = MutationObserver((mutations, obs) {
+        mutations.forEach((mutation) {
           _checkSubtree(mutation.addedNodes, _SubtreeState.nodesAdded);
           _checkSubtree(mutation.removedNodes, _SubtreeState.nodesRemoved);
-        }
+        });
       });
-    });
 
-    bool observeAttributes =
-        rootAttributes.isNotEmpty && dynamism.has(Dynamism.attributes);
+      _subtreeObserver.observe(root,
+          childList: true, subtree: !directDescendantsOnly);
 
-    _observer.observe(root,
-        attributes: observeAttributes,
-        attributeOldValue: observeAttributes,
-        attributeFilter: rootAttributes.keys,
-        childList: subtreeAttributes.isNotEmpty &&
-            dynamism.has(Dynamism.directChildren),
-        subtree:
-            subtreeAttributes.isNotEmpty && dynamism.has(Dynamism.subtree));
+      _nestedRootElements
+          .addAll(root.querySelectorAll(root.tagName)..remove(root));
 
-    _checkSubtree(root.children, _SubtreeState.initial);
+      _checkSubtree(root.querySelectorAll('*'), _SubtreeState.initial);
+    }
   }
 
   final Element root;
-  final Map<String, String> rootAttributes;
-  final Map<String, String> subtreeAttributes;
-  final Dynamism dynamism;
-  MutationObserver _observer;
-  final _nestedRootElements = Set<Element>();
-  final _subtreeObservers = Map<Element, MutationObserver>();
 
-  /// The subtree elements that have one or more of the [subtreeAttributes]
-  /// defined.
-  Iterable<Element> get subtreeElements => _subtreeObservers.keys;
+  /// Maps each attribute observed on [root] to a corresponding CSS class on
+  /// root's first element child, or `null` if no corresponding CSS class exists.
+  final Map<String, String> rootAttributes;
+
+  /// Maps each attribute observed in [root]'s subtree to a corresponding CSS
+  /// class on the element containing the attribute, or `null` if no
+  /// corresponding CSS class exists.
+  final Map<String, String> subtreeAttributes;
+  MutationObserver _attributeObserver;
+  MutationObserver _subtreeObserver;
+  final _nestedRootElements = Set<Element>();
+  final _subtreeAttributeObservers = Map<Element, MutationObserver>();
+
+  /// Elements that have one or more of the [subtreeAttributes] defined.
+  Iterable<Element> get subtreeElements => _subtreeAttributeObservers.keys;
+
+  /// Disconnects the subtree [MutationObserver] and optionally each of the
+  /// existing attribute observers in the subtree.
+  void stopSubtreeObservations([bool attributeObservations = false]) {
+    _subtreeObserver?.disconnect();
+    if (attributeObservations) {
+      _subtreeAttributeObservers.forEach((el, obs) => obs.disconnect());
+      _subtreeAttributeObservers.clear();
+    }
+  }
 
   @mustCallSuper
   void destroy() {
-    _observer?.disconnect();
-    _subtreeObservers.forEach((el, obs) => obs.disconnect());
-    _subtreeObservers.clear();
+    _attributeObserver?.disconnect();
+    _subtreeObserver?.disconnect();
+    _subtreeAttributeObservers.forEach((el, obs) => obs.disconnect());
+    _subtreeAttributeObservers.clear();
   }
 
   /// Called when one of the [rootAttributes] changes on [root].
   @protected
-  void attributeChanged(String name, String oldValue, String newValue);
+  @mustCallSuper
+  void attributeChanged(String name, String oldValue, String newValue) {
+    if (rootAttributes[name] != null)
+      root.children[0].classes.toggle(rootAttributes[name]);
+  }
 
   /// Called when a subtree element is added or removed that contains one or
   /// more [subtreeAttributes].
@@ -76,8 +99,12 @@ abstract class AttributeObserverBase {
 
   /// Called when any of the [subtreeAttributes] changes on a subtree element.
   @protected
+  @mustCallSuper
   void subtreeAttributeChanged(
-      Element target, String name, String oldValue, String newValue);
+      Element target, String name, String oldValue, String newValue) {
+    if (subtreeAttributes[name] != null)
+      target.classes.toggle(subtreeAttributes[name]);
+  }
 
   void _checkSubtree(List<Node> nodes, _SubtreeState state) {
     for (Node node in nodes) {
@@ -93,14 +120,18 @@ abstract class AttributeObserverBase {
             break;
           }
         }
-        if (!nested) {
-          for (String attr in subtreeAttributes) {
-            if (el.attributes.containsKey(attr)) {
+        if (nested) continue;
+        bool firstAttribute = true;
+        subtreeAttributes.forEach((attr, klass) {
+          if (el.attributes.containsKey(attr)) {
+            if (firstAttribute) {
+              firstAttribute = false;
               if (state == _SubtreeState.nodesRemoved) {
-                _subtreeObservers[el]?.disconnect();
-                _subtreeObservers.remove(el);
+                _subtreeAttributeObservers[el]?.disconnect();
+                _subtreeAttributeObservers.remove(el);
               } else {
-                final obs = MutationObserver((mutations, o) {
+                _subtreeAttributeObservers[el] =
+                    MutationObserver((mutations, o) {
                   mutations.forEach((mutation) {
                     subtreeAttributeChanged(
                         mutation.target,
@@ -109,19 +140,20 @@ abstract class AttributeObserverBase {
                         mutation.target.attributes[mutation.attributeName]);
                   });
                 });
-                obs.observe(el,
+                _subtreeAttributeObservers[el].observe(el,
                     attributes: true,
                     attributeOldValue: true,
-                    attributeFilter: subtreeAttributes.toList());
-                _subtreeObservers[el] = obs;
+                    attributeFilter: subtreeAttributes.keys.toList());
               }
               if (state != _SubtreeState.initial) {
                 subtreeChanged(el, state == _SubtreeState.nodesRemoved);
               }
-              break;
             }
+
+            if (state != _SubtreeState.nodesRemoved && klass != null)
+              el.classes.add(klass);
           }
-        }
+        });
       }
     }
   }
@@ -133,33 +165,43 @@ enum _SubtreeState { initial, nodesAdded, nodesRemoved }
 /// [subtreeAttributeChanged] as callbacks.
 class AttributeObserver extends AttributeObserverBase {
   AttributeObserver(Element root,
-      {List<String> rootAttributes,
-      List<String> subtreeAttributes,
+      {Map<String, String> rootAttributes,
+      Map<String, String> subtreeAttributes,
+      bool directDescendantsOnly: false,
       this.onAttributeChanged,
       this.onSubtreeChanged,
       this.onSubtreeAttributeChanged})
       : super(root,
-            rootAttributes: rootAttributes,
-            subtreeAttributes: subtreeAttributes);
+            rootAttributes: rootAttributes ?? {},
+            subtreeAttributes: subtreeAttributes ?? {},
+            directDescendantsOnly: directDescendantsOnly ?? false);
 
   final AttributeChangedCallback onAttributeChanged;
   final SubtreeChangedCallback onSubtreeChanged;
   final SubtreeAttributeChangedCallback onSubtreeAttributeChanged;
 
   @override
+  @protected
+  @mustCallSuper
   void attributeChanged(String name, String oldValue, String newValue) {
+    super.attributeChanged(name, oldValue, newValue);
     if (onAttributeChanged != null)
       onAttributeChanged(name, oldValue, newValue);
   }
 
   @override
+  @protected
+  @mustCallSuper
   void subtreeChanged(Element target, bool removed) {
     if (onSubtreeChanged != null) onSubtreeChanged(target, removed);
   }
 
   @override
+  @protected
+  @mustCallSuper
   void subtreeAttributeChanged(
       Element target, String name, String oldValue, String newValue) {
+    super.subtreeAttributeChanged(target, name, oldValue, newValue);
     if (onSubtreeAttributeChanged != null)
       onSubtreeAttributeChanged(target, name, oldValue, newValue);
   }
@@ -172,44 +214,3 @@ typedef void SubtreeChangedCallback(Element target, bool removed);
 
 typedef void SubtreeAttributeChangedCallback(
     Element target, String name, String oldValue, String newValue);
-
-/// Flags for how dynamic an element may be. Having full dynamism of every
-/// element in a large and deeply nested DOM tree would grow inefficiently. The
-/// options here allow users to specify which changes can be ignored.
-class Dynamism {
-  const Dynamism._(this.value);
-  static Dynamism combine([Dynamism a, Dynamism b, Dynamism c]) =>
-      Dynamism._((a?.value ?? 0) | (b?.value ?? 0) | (c?.value ?? 0));
-  final int value;
-
-  /// [rootAttributes] on [root] will not change, and its subtree will not
-  /// change with respect to the [subtreeAttributes].
-  static const none = Dynamism._(0);
-
-  /// The [rootAttibutes] may change dynamically. [root]'s subtree will not
-  /// change with respect to the [subtreeAttributes].
-  static const attributes = Dynamism._(1);
-
-  /// Elements containing [subtreeAttributes] may be added or removed from
-  /// [root]'s subtree, but only as direct children.
-  static const directChildren = Dynamism._(2);
-
-  /// Elements containing [subtreeAttributes] may be added or removed from
-  /// anywhere in [root]'s subtree.
-  static const subtree = Dynamism._(6); // 4|2
-
-  /// Subtree (or direct child) elements containing [subtreeAttributes] may
-  /// update those attributes dynamically.
-  static const childAttributes = Dynamism._(8);
-
-  /// All dynamic changes are allowed. [rootAttributes] on [root], elements
-  /// containing [subtreeAttributes] may be added or removed anywhere in the
-  /// subtree, and the [subtreeAttributes] on subtree elements may change
-  /// dynamically.
-  ///
-  /// Note that one or more [subtreeAttributes] must be on an added or removed
-  /// child element for it to be observed.
-  static const full = Dynamism._(15);
-
-  bool has(Dynamism other) => value & other.value != 0;
-}

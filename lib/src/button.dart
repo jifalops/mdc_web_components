@@ -34,18 +34,18 @@ class MWCButton extends MWCComponent {
   static const rippleAttr = 'ripple';
 
   MWCButton(Element root)
-      : super(root, rootAttributes: [
-          rippleAttr,
-          hrefAttr,
-          targetAttr,
-          raisedAttr,
-          unelevatedAttr,
-          outlinedAttr,
-          denseAttr,
-          disabledAttr,
-          iconAttr,
-          labelAttr
-        ]);
+      : super(root, rootAttributes: {
+          rippleAttr: null,
+          hrefAttr: null,
+          targetAttr: null,
+          raisedAttr: raisedClass,
+          unelevatedAttr: unelevatedClass,
+          outlinedAttr: outlinedClass,
+          denseAttr: denseClass,
+          disabledAttr: null,
+          iconAttr: null,
+          labelAttr: null
+        });
 
   @override
   MDCRipple get component => _mdcRipple;
@@ -92,12 +92,6 @@ class MWCButton extends MWCComponent {
 
   @override
   String innerHtml() {
-    final classes = ClassMap({
-      raisedClass: raised,
-      unelevatedClass: unelevated,
-      outlinedClass: outlined,
-      denseClass: dense,
-    });
     final iconHtml = icon != null
         ? '<i aria-hidden="true" class="mdc-button__icon ' +
             (usesFontAwesome ? '$icon"></i>' : 'material-icons">$icon</i>')
@@ -110,19 +104,19 @@ class MWCButton extends MWCComponent {
     }
     if (href == null) {
       return '''
-        <button class="mdc-button $classes" aria-label="${label ?? icon}"
+        <button class="mdc-button" aria-label="${label ?? icon ?? ''}"
             ${disabled ? disabledAttr : ''}>
           $iconHtml
-          $label
+          ${label ?? ''}
           <slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot>
         </button>''';
     } else {
       return '''
-        <a class="mdc-button $classes" aria-label="${label ?? icon}"
+        <a class="mdc-button" aria-label="${label ?? icon ?? ''}"
             ${disabled ? disabledAttr : ''} role="button"
             href="$href"${target != null ? ' target="$target"' : ''}">
           $iconHtml
-          $label
+          ${label ?? ''}
           <slot>${root.querySelector('slot')?.innerHtml ?? root.innerHtml}</slot>
         </a>''';
     }
@@ -170,12 +164,6 @@ class MWCButton extends MWCComponent {
         setAttribute(mdcRoot, targetAttr, newValue);
         break;
     }
-  }
-
-  @override
-  void destroy() {
-    _removeRipple();
-    super.destroy();
   }
 
   void _addRipple() {

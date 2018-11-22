@@ -14,7 +14,7 @@ class MWCCard extends MWCComponent {
   static const tag = 'mwc-card';
 
   static const outlinedClass = 'mdc-card--outlined';
-  static const primaryActionSlotClass = 'mdc-card__primary-action';
+  static const primaryActionClass = 'mdc-card__primary-action';
   static const mediaClass = 'mdc-card__media';
   static const mediaSquareClass = 'mdc-card__media--square';
   static const media16x9Class = 'mdc-card__media--16-9';
@@ -28,12 +28,12 @@ class MWCCard extends MWCComponent {
   static const actionIconClass = 'mdc-card__action--icon';
 
   static const outlinedAttr = 'outlined';
-  static const primaryActionSlot = 'primary-action';
-  static const mediaSlot = 'media';
+  static const primaryActionAttr = 'primary-action';
+  static const mediaAttr = 'media';
   static const mediaSquareAttr = 'media-square';
   static const media16x9Attr = 'media-16x9';
   static const mediaContentAttr = 'media-content';
-  static const actionsSlot = 'actions';
+  static const actionsAttr = 'actions';
   static const actionsFullBleedAttr = 'actions-full-bleed';
   static const actionButtonsAttr = 'action-buttons';
   static const actionIconsAttr = 'action-icons';
@@ -41,33 +41,23 @@ class MWCCard extends MWCComponent {
   static const actionButtonAttr = 'action-button';
   static const actionIconAttr = 'action-icon';
 
-  static const _primaryActionSlotSelector = '[slot="${primaryActionSlot}"]';
-  static const _mediaSlotSelector = '[slot="${mediaSlot}"]';
-  static const _actionsSlotSelector = '[slot="${actionsSlot}"]';
-
   MWCCard(Element root)
-      : super(root, rootAttributes: [
-          outlinedAttr
-        ], subtreeAttributes: [
-          primaryActionSlot,
-          mediaSlot,
-          mediaSquareAttr,
-          media16x9Attr,
-          mediaContentAttr,
-          actionsSlot,
-          actionsFullBleedAttr,
-          actionButtonsAttr,
-          actionIconsAttr,
-          actionAttr,
-          actionButtonAttr,
-          actionIconAttr,
-        ]) {
-    subtreeElements.forEach((el) {
-      if (hasAttribute(el, primaryActionSlot))
-        el.classes.add(primaryActionSlotClass);
-      else if (hasAttribute(el, attribute))
-    });
-  }
+      : super(root, rootAttributes: {
+          outlinedAttr: outlinedClass
+        }, subtreeAttributes: {
+          primaryActionAttr: primaryActionClass,
+          mediaAttr: mediaClass,
+          mediaSquareAttr: mediaSquareClass,
+          media16x9Attr: media16x9Class,
+          mediaContentAttr: mediaContentClass,
+          actionsAttr: actionsClass,
+          actionsFullBleedAttr: actionsFullBleedClass,
+          actionButtonsAttr: actionButtonsClass,
+          actionIconsAttr: actionIconsClass,
+          actionAttr: actionClass,
+          actionButtonAttr: actionButtonClass,
+          actionIconAttr: actionIconClass,
+        });
 
   @override
   String get displayStyle => 'block';
@@ -78,24 +68,8 @@ class MWCCard extends MWCComponent {
   @override
   String innerHtml() {
     return '''
-      <div class="mdc-card ${outlined ? outlinedClass : ''}">
+      <div class="mdc-card">
         ${root.innerHtml}
       </div>''';
   }
-
-  @override
-  void attributeChanged(String name, String oldValue, String newValue) {
-    switch (name) {
-      case outlinedAttr:
-        mdcRoot.classes.toggle(outlinedClass);
-        break;
-    }
-  }
-
-  @override
-  void subtreeChanged(Element target, bool removed) {}
-
-  @override
-  void subtreeAttributeChanged(
-      Element target, String name, String oldValue, String newValue) {}
 }
