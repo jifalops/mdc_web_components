@@ -1,3 +1,18 @@
+> ## Project is on hold
+> The intent was to interpret markup similar to how it will be in the official JS version, still early in development.
+> 1. Use the component tags without registering them (there is an issue with dart:html).
+> 2. Shorten the BEM CSS class notation to use "straightforward" attribute names.
+> 3. Have Dart fill in the BEM classes
+> 4. Avoid shadow roots because this is a temporary workaround. I didn't want to bundle styles with each element was curious about non shadow-root components.
+>
+> *But*
+>
+> * Replacing an `<mwc-*>` node with its `<tag class="mdc-*">` equivalent seems wrong (user's source markup couldn't be referenced directly), so the MDC markup was added as a child of the MWC tags.
+> * Some SASS style rules bundled with MDC require a BEM block's element to be a direct child, meaning this pseudo `<mwc-*>` mumbo jumbo may break when being nested.
+> * There may be other side effects of using unknown elements, but afiak setting their `display` style is pretty much all that's needed.
+> 
+> As a result this project will resume when the this [issue](https://github.com/material-components/material-components-web-components/issues/159) gets resolved.
+
 # mdc_web_components
 
 (Pseudo) Web components built on the mdc_web package.
